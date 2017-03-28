@@ -8,6 +8,7 @@ strategies.
 ### Implementations
 
  - `FixedSizeMapWithLinkedListChaining` - fixed size map with separate chaining implemented via linked lists.
+ - `FullCopyResizeMapWithLinkedListChaining` - map which resizes automatically when `loadFactor` >= `0.75` by performing a full table copy.
   
 ## Resources
 

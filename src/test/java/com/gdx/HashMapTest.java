@@ -20,6 +20,12 @@ public final class HashMapTest
         assertMainOperations(new FixedSizeMapWithLinkedListChaining<>());
     }
 
+    @Test
+    public void testFullCopyResizeMapWithLinkedListChaining()
+    {
+        assertMainOperations(new FullCopyResizeMapWithLinkedListChaining<>());
+    }
+
     private void assertMainOperations(Map<String, Integer> map)
     {
         // Put

@@ -18,12 +18,19 @@ import java.util.Set;
 public final class FixedSizeMapWithLinkedListChaining<K, V> implements Map<K, V>
 {
     private static final int INITIAL_SIZE = 16;
+    private final int size;
 
     private EntryImpl<K, V>[] table;
 
     FixedSizeMapWithLinkedListChaining()
     {
-        this.table = new EntryImpl[INITIAL_SIZE];
+        this(INITIAL_SIZE);
+    }
+
+    FixedSizeMapWithLinkedListChaining(int size)
+    {
+        this.size = size;
+        this.table = new EntryImpl[size];
     }
 
     public int size()
@@ -127,7 +134,7 @@ public final class FixedSizeMapWithLinkedListChaining<K, V> implements Map<K, V>
 
     public void clear()
     {
-        this.table = new EntryImpl[INITIAL_SIZE];
+        this.table = new EntryImpl[size];
     }
 
     public Set<K> keySet()

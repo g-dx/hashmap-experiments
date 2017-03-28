@@ -1,7 +1,6 @@
 package com.gdx;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -20,6 +19,7 @@ public final class FixedSizeMapWithLinkedListChaining<K, V> implements Map<K, V>
     private static final int INITIAL_SIZE = 16;
 
     private EntryImpl<K, V>[] table;
+    private int size;
 
     FixedSizeMapWithLinkedListChaining()
     {
@@ -33,7 +33,7 @@ public final class FixedSizeMapWithLinkedListChaining<K, V> implements Map<K, V>
 
     public int size()
     {
-        return Arrays.stream(table).map(FixedSizeMapWithLinkedListChaining::length).reduce((acc, size) -> acc += size).orElseGet(() -> 0);
+        return size;
     }
 
     public boolean isEmpty()
@@ -76,6 +76,7 @@ public final class FixedSizeMapWithLinkedListChaining<K, V> implements Map<K, V>
         // Create new bucket
         if (entry == null)
         {
+            size++;
             table[i] = new EntryImpl<K, V>(key, value);
             return null;
         }
@@ -92,6 +93,7 @@ public final class FixedSizeMapWithLinkedListChaining<K, V> implements Map<K, V>
         }
 
         // No match - append to end
+        size++;
         prev.setNext(new EntryImpl<K, V>(key, value));
         return null;
     }
@@ -105,6 +107,7 @@ public final class FixedSizeMapWithLinkedListChaining<K, V> implements Map<K, V>
         {
             if(entry.getKey().equals(key))
             {
+                size--;
                 if (prev == null)
                 {
                     table[i] = entry.next;
@@ -183,16 +186,6 @@ public final class FixedSizeMapWithLinkedListChaining<K, V> implements Map<K, V>
             }
         }
         return null;
-    }
-
-    private static <K, V> int length(EntryImpl<K, V> entry)
-    {
-        int i = 0;
-        for (; entry != null; entry = entry.next)
-        {
-            i++;
-        }
-        return i;
     }
 
     private static final class EntryImpl<K, V> implements Map.Entry<K, V>

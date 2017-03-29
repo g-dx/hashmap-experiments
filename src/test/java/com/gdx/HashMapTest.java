@@ -32,6 +32,12 @@ public final class HashMapTest
         assertMainOperations(new FullCopyResizeMapWithDynamicArrayChaining<>());
     }
 
+    @Test
+    public void testIncrementalResizeMapWithLinkedListChaining()
+    {
+        assertMainOperations(new IncrementalResizeMapWithLinkedListChaining<>());
+    }
+
     private void assertMainOperations(Map<String, Integer> map)
     {
         // Put

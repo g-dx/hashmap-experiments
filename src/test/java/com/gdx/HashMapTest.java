@@ -17,7 +17,7 @@ public final class HashMapTest
     @Test
     public void testFixedSizeMapWithLinkedListChaining()
     {
-        assertMainOperations(new FixedSizeMapWithLinkedListChaining<>());
+        assertMainOperations(new FixedSizeMapWithLinkedListChaining<>(1024)); // Value which allows test to complete in a reasonable time!
     }
 
     @Test

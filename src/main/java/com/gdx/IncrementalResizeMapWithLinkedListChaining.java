@@ -73,7 +73,7 @@ public final class IncrementalResizeMapWithLinkedListChaining<K, V> implements M
     public V put(K key, V value)
     {
         maybeResize();
-        V oldValue = putImpl(key, value);
+        V oldValue = putImpl(new EntryImpl<>(key, value));
         maybeMoveOldEntries();
         return oldValue;
     }
@@ -223,10 +223,17 @@ public final class IncrementalResizeMapWithLinkedListChaining<K, V> implements M
         for (int i = 0, moved = 0; i < oldTable.length && moved <= BATCH_MOVE_SIZE; i++)
         {
             EntryImpl<K, V> entry = oldTable[i];
-            for (; entry != null && moved <= BATCH_MOVE_SIZE; entry = entry.next, moved++, oldSize--)
+            for (; entry != null && moved <= BATCH_MOVE_SIZE; moved++, oldSize--)
             {
-                // TODO: Consider memory churn here - can we simply copy the reference?
-                putImpl(entry.getKey(), entry.getValue());
+                // Record next in chain
+                EntryImpl<K, V> next = entry.next;
+
+                // Move
+                entry.setNext(null);
+                putImpl(entry);
+
+                // Move to next element in chain
+                entry = next;
             }
             oldTable[i] = entry;
         }
@@ -238,33 +245,33 @@ public final class IncrementalResizeMapWithLinkedListChaining<K, V> implements M
         }
     }
 
-    private V putImpl(K key, V value)
+    private V putImpl(EntryImpl<K, V> entry)
     {
-        int i = hash(key, curTable.length);
-        EntryImpl<K, V> entry = curTable[i];
+        int i = hash(entry.getKey(), curTable.length);
+        EntryImpl<K, V> cur = curTable[i];
 
         // Create new bucket
-        if (entry == null)
+        if (cur == null)
         {
             curSize++;
-            curTable[i] = new EntryImpl<K, V>(key, value);
+            curTable[i] = entry;
             return null;
         }
 
         // Walk buckets to search existing match
         EntryImpl<K, V> prev = null;
-        for (; entry != null; prev = entry, entry = entry.next)
+        for (; cur != null; prev = cur, cur = cur.next)
         {
-            if (entry.getKey().equals(key))
+            if (cur.getKey().equals(entry.getKey()))
             {
                 // Overwrite
-                return entry.setValue(value);
+                return cur.setValue(entry.getValue());
             }
         }
 
         // No match - append to end
         curSize++;
-        prev.setNext(new EntryImpl<K, V>(key, value));
+        prev.setNext(entry);
         return null;
     }
 

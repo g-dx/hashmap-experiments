@@ -73,7 +73,7 @@ public final class FullCopyResizeMapWithLinkedListChaining<K, V> implements Map<
     public V put(K key, V value)
     {
         maybeResize();
-        return putImpl(key, value, table);
+        return putImpl(new EntryImpl<K, V>(key, value), table);
     }
 
     public V remove(Object key)
@@ -167,33 +167,33 @@ public final class FullCopyResizeMapWithLinkedListChaining<K, V> implements Map<
         return null;
     }
 
-    private V putImpl(K key, V value, EntryImpl<K, V>[] table)
+    private V putImpl(EntryImpl<K, V> entry, EntryImpl<K, V>[] table)
     {
-        int i = hash(key, table.length);
-        EntryImpl<K, V> entry = table[i];
+        int i = hash(entry.getKey(), table.length);
+        EntryImpl<K, V> cur = table[i];
 
         // Create new bucket
-        if (entry == null)
+        if (cur == null)
         {
             size++;
-            table[i] = new EntryImpl<K, V>(key, value);
+            table[i] = entry;
             return null;
         }
 
         // Walk buckets to search existing match
         EntryImpl<K, V> prev = null;
-        for (; entry != null; prev = entry, entry = entry.next)
+        for (; cur != null; prev = cur, cur = cur.next)
         {
-            if (entry.getKey().equals(key))
+            if (cur.getKey().equals(entry.getKey()))
             {
                 // Overwrite
-                return entry.setValue(value);
+                return cur.setValue(entry.getValue());
             }
         }
 
         // No match - append to end
         size++;
-        prev.setNext(new EntryImpl<K, V>(key, value));
+        prev.setNext(entry);
         return null;
     }
 
@@ -208,9 +208,20 @@ public final class FullCopyResizeMapWithLinkedListChaining<K, V> implements Map<
             EntryImpl<K, V>[] newTable = new EntryImpl[table.length * 2];
 
             // Copy all items across
-            for (K key : keySet())
+            for (int i = 0; i < table.length; i++)
             {
-                putImpl(key, get(key), newTable);
+                for (EntryImpl<K, V> entry = table[i]; entry != null;)
+                {
+                    // Record next in chain
+                    EntryImpl<K, V> next = entry.next;
+
+                    // Move
+                    entry.setNext(null);
+                    putImpl(entry, newTable);
+
+                    // Move to next element in chain
+                    entry = next;
+                }
             }
 
             // Set new table & correct size

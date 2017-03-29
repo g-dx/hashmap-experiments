@@ -2,7 +2,6 @@ package com.gdx;
 
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Map;
 
 import static java.lang.String.format;
@@ -36,6 +35,12 @@ public final class HashMapTest
     public void testIncrementalResizeMapWithLinkedListChaining()
     {
         assertMainOperations(new IncrementalResizeMapWithLinkedListChaining<>());
+    }
+
+    @Test
+    public void testFullCopyResizeMapWithLinearProbing()
+    {
+        assertMainOperations(new FullCopyResizeMapWithLinearProbing<>());
     }
 
     private void assertMainOperations(Map<String, Integer> map)

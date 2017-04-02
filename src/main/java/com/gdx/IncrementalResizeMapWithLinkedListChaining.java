@@ -21,10 +21,10 @@ public final class IncrementalResizeMapWithLinkedListChaining<K, V> implements M
     private static final EntryImpl[] EMPTY = new EntryImpl[1];
 
     private static final int INITIAL_SIZE = 16;
-    private static final int BATCH_MOVE_SIZE = 16;
+    private static final int BATCH_MOVE_SIZE = 4;
 
     private EntryImpl<K, V>[] curTable, oldTable;
-    private int curSize, oldSize;
+    private int curSize, oldSize, oldPos;
 
     IncrementalResizeMapWithLinkedListChaining()
     {
@@ -135,6 +135,7 @@ public final class IncrementalResizeMapWithLinkedListChaining<K, V> implements M
         curTable = new EntryImpl[INITIAL_SIZE];
         oldTable = EMPTY;
         oldSize = 0;
+        oldPos = 0;
     }
 
     public Set<K> keySet()
@@ -220,9 +221,15 @@ public final class IncrementalResizeMapWithLinkedListChaining<K, V> implements M
             return;
         }
 
-        for (int i = 0, moved = 0; i < oldTable.length && moved <= BATCH_MOVE_SIZE; i++)
+        for (int moved = 0; oldPos < oldTable.length && moved <= BATCH_MOVE_SIZE;)
         {
-            EntryImpl<K, V> entry = oldTable[i];
+            EntryImpl<K, V> entry = oldTable[oldPos];
+            if (entry == null)
+            {
+                oldPos++;
+                continue;
+            }
+
             for (; entry != null && moved <= BATCH_MOVE_SIZE; moved++, oldSize--)
             {
                 // Record next in chain
@@ -235,13 +242,24 @@ public final class IncrementalResizeMapWithLinkedListChaining<K, V> implements M
                 // Move to next element in chain
                 entry = next;
             }
-            oldTable[i] = entry;
+
+            if (entry == null)
+            {
+                // Done with this index - move on
+                oldPos++;
+            }
+            else
+            {
+                // Save remaining chain into slot
+                oldTable[oldPos] = entry;
+            }
         }
 
         // Old table move is complete
         if (oldSize == 0)
         {
             oldTable = EMPTY;
+            oldPos = 0;
         }
     }
 
